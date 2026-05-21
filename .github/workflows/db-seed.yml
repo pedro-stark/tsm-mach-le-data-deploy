@@ -45,9 +45,13 @@ jobs:
         env:
           PGPASSWORD: ${{ secrets.CLOUD_SQL_PASSWORD }}
         run: |
+          sed \
+            -e '/^\\restrict/d' \
+            -e '/^SET transaction_timeout/d' \
+            -e '/OWNER TO postgres;/d' \
+            src/postgresql/ml_movies_small.sql | \
           psql \
             --host=127.0.0.1 \
             --port=5432 \
             --username=${{ vars.CLOUD_SQL_USER }} \
-            --dbname=cinematch \
-            --file=src/postgresql/ml_movies_small.sql
+            --dbname=cinematch
