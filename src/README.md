@@ -116,6 +116,13 @@ echo -n "YOUR_WANDB_API_KEY" \
   | gcloud secrets create WANDB_API_KEY --data-file=-
 ```
 
+> **If `DATABASE_URL` already exists** (e.g. was created with an IP-based URL), add a new version instead:
+> ```bash
+> echo -n "postgresql://cinematch_user:YOUR_PASSWORD@/cinematch?host=/cloudsql/PROJECT_ID:REGION:cinematch-db" \
+>   | gcloud secrets versions add DATABASE_URL --data-file=-
+> ```
+> Then redeploy by pushing to `main` or triggering the deploy workflow manually so the backend picks up the updated secret.
+
 ### 4. Create a GitHub Actions service account
 
 ```bash
