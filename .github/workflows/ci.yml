@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -34,6 +32,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build backend image
         run: docker build -t cinematch-backend src/backend/
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build frontend image
+        run: docker build -t cinematch-frontend src/frontend/
 
   build-model-service:
     runs-on: ubuntu-latest
