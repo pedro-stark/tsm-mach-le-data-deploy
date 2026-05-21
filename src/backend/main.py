@@ -7,6 +7,7 @@ import os
 from routers.version import router as version_router
 from routers.recommendation import router as recommendation_router
 from routers.enum import router as enum_router
+import models.user  # noqa: F401 — registers Users with SQLAlchemy's class registry
 
 # load env variables
 load_dotenv()
