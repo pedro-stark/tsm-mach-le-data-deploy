@@ -50,11 +50,16 @@ Notes for development:
    2. Frontend: `streamlit run main.py`
    3. Model Service: `model-service.py`
 
-4. FsatAPI Docu available at:
+4. FastAPI Docu available at:
    1. Backend <a href="localhost:8000/docs">localhost:8000/docs</a> or <a href="127.0.0.1:8000/docs">127.0.0.1:8000/docs</a>.
    2. Model Service <a href="localhost:8001/docs">localhost:8000/docs</a> or <a href="127.0.0.1:8001/docs">127.0.0.1:8000/docs</a>.
 
-## For Deployment - with Docker
+## Shutdown PostgresQL
+
+- shell shutdown postgreSQL: `net stop postgresql-x64-18`
+- bash shutdown postgreSQL: `sudo systemctl stop postgresql`
+
+## Deployment to GCP
 
 Deployment targets **Google Cloud Run** (fully managed, HTTPS URLs auto-generated). Each service gets a `https://*-xxx.run.app` URL. The CI/CD pipeline is handled by GitHub Actions.
 
@@ -117,10 +122,12 @@ echo -n "YOUR_WANDB_API_KEY" \
 ```
 
 > **If `DATABASE_URL` already exists** (e.g. was created with an IP-based URL), add a new version instead:
+>
 > ```bash
 > echo -n "postgresql://cinematch_user:YOUR_PASSWORD@/cinematch?host=/cloudsql/PROJECT_ID:REGION:cinematch-db" \
 >   | gcloud secrets versions add DATABASE_URL --data-file=-
 > ```
+>
 > Then redeploy by pushing to `main` or triggering the deploy workflow manually so the backend picks up the updated secret.
 
 ### 4. Create a GitHub Actions service account
@@ -217,8 +224,3 @@ Model:    https://cinematch-model-service-xxxx-ew.a.run.app/health
 ```
 
 > **Note:** The first request after a period of inactivity may take ~30s (Cloud Run cold start while the model service downloads the ONNX model from W&B).
-
-## Shutdown PostgresQL
-
-- shell shutdown postgreSQL: `net stop postgresql-x64-18`
-- bash shutdown postgreSQL: `sudo systemctl stop postgresql`
