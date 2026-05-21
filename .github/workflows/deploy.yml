@@ -74,6 +74,7 @@ jobs:
             --allow-unauthenticated \
             --port 8000 \
             --memory 512Mi \
+            --add-cloudsql-instances ${{ env.PROJECT }}:${{ env.REGION }}:cinematch-db \
             --set-env-vars "HOST=0.0.0.0,DEV_MODE=0,MODULE_NAME=main:app,TITLE=CinematchAPI,VERSION_NR=0.3" \
             --set-env-vars "MODEL_SERVICE_URL=${{ steps.model_url.outputs.url }}" \
             --set-secrets "DATABASE_URL=DATABASE_URL:latest"
