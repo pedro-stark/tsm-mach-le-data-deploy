@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, Query
 import requests
 import dotenv
@@ -7,6 +8,8 @@ import json
 
 from models.movie import Movies, Movie_genres, Tags
 from models.enum import Genres
+from models.user import Users
+from models.rating import Ratings
 
 from schemas.recommendation import MoviesResponse, UserMovieRatings, MoviePredictions
 
@@ -70,6 +73,7 @@ def create_movie_recommendations(
     db: Session, user_movie_ratings: list[UserMovieRatings]
 ) -> MoviePredictions:
     """Generates movie reccomendations, using the model-service api.
+    Additionally saves the newly inputed ratings into the database.
 
     Args:
         db (Session): Provided by the session factory from the router
@@ -83,6 +87,9 @@ def create_movie_recommendations(
     movie_ids_ui: list = [item.movie_id for item in user_movie_ratings]
     validation_movie_ids(movie_ids_ui, db)
     check_model_service_health()
+
+    # save new ratings for retraining of the model
+    write_new_rating(db, user_movie_ratings)
 
     # get reccomendations from api
     body: list = [item.model_dump() for item in user_movie_ratings]
@@ -126,6 +133,35 @@ def create_movie_recommendations(
 
 
 ########################## validation and utility funcitons ##########################
+# NOTE: Refactor this and put it into a separate file
+
+
+def write_new_rating(db: Session, user_movie_ratings: list[UserMovieRatings]) -> None:
+    """creates a new entry in the ratings table with a new user
+    NOTE: This could lead to false data, because the frontend, always sends a new request, after each added movie.
+    A cleaner implementation would be to give out a session or user token, which the front-end will always return,
+    but this will get too complicated for a small project
+
+    Args:
+        db (Session): sqlalchemy db session
+        user_movie_ratings (list[UserMovieRatings]): the inputed user ratings
+    """
+
+    try:
+        new_user = Users()
+
+        new_user.ratings = [
+            Ratings(id_movie=item.movie_id, rating=item.rating)
+            for item in user_movie_ratings
+        ]
+
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+    except SQLAlchemyError:
+        db.rollback()
+        raise
 
 
 def movie_row_parser(rows: object) -> dict:
@@ -142,7 +178,6 @@ def movie_row_parser(rows: object) -> dict:
 
     for r in rows:
         if r.movie_id not in movies:
-
             movies[r.movie_id] = {
                 "movie_id": r.movie_id,
                 "movie_title": r.movie_title,
